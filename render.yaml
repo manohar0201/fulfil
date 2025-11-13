@@ -62,15 +62,15 @@ services:
       - key: CELERY_RESULT_BACKEND
         value: ${REDIS_URL}
 
+  - type: redis
+    name: acme-importer-redis
+    plan: free
+    region: oregon
+    ipAllowList: []
+
 databases:
   - name: acme-importer-db
     plan: free
     region: oregon
     databaseName: acme_importer
     user: acme_importer_user
-
-redis:
-  - name: acme-importer-redis
-    region: oregon
-    plan: free
-
