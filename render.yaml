@@ -4,6 +4,7 @@ services:
     env: python
     rootDir: BE
     region: oregon
+    pythonVersion: 3.11
     plan: free
     buildCommand: |
       pip install -r requirements.txt
