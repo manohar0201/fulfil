@@ -1,0 +1,74 @@
+services:
+  - type: web
+    name: acme-importer-api
+    env: python
+    region: oregon
+    buildCommand: |
+      pip install -r requirements.txt
+      python manage.py collectstatic --noinput
+      python manage.py migrate
+    startCommand: gunicorn acme_importer.wsgi:application --bind 0.0.0.0:$PORT
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: acme_importer.settings
+      - key: SECRET_KEY
+        generateValue: true
+      - key: CELERY_TASK_ALWAYS_EAGER
+        value: "false"
+      - key: CELERY_TASK_EAGER_PROPAGATES
+        value: "false"
+      - key: ALLOWED_HOSTS
+        value: acme-importer-api.onrender.com
+      - key: DATABASE_URL
+        fromDatabase:
+          name: acme-importer-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: acme-importer-redis
+          type: redis
+      - key: CELERY_BROKER_URL
+        value: ${REDIS_URL}
+      - key: CELERY_RESULT_BACKEND
+        value: ${REDIS_URL}
+
+  - type: worker
+    name: acme-importer-worker
+    env: python
+    region: oregon
+    buildCommand: pip install -r requirements.txt
+    startCommand: celery -A acme_importer worker -l info
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: acme_importer.settings
+      - key: SECRET_KEY
+        sync: true
+      - key: CELERY_TASK_ALWAYS_EAGER
+        value: "false"
+      - key: CELERY_TASK_EAGER_PROPAGATES
+        value: "false"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: acme-importer-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: acme-importer-redis
+          type: redis
+      - key: CELERY_BROKER_URL
+        value: ${REDIS_URL}
+      - key: CELERY_RESULT_BACKEND
+        value: ${REDIS_URL}
+
+databases:
+  - name: acme-importer-db
+    plan: free
+    region: oregon
+    databaseName: acme_importer
+    user: acme_importer_user
+
+redis:
+  - name: acme-importer-redis
+    region: oregon
+    plan: free
+
