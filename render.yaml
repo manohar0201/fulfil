@@ -62,6 +62,12 @@ services:
     region: oregon
     ipAllowList: []
 
+  - type: redis
+    name: acme-importer-redis
+    plan: free
+    region: oregon
+    ipAllowList: []
+
 databases:
   - name: acme-importer-db
     plan: free
