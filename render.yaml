@@ -4,14 +4,13 @@ services:
     env: python
     rootDir: BE
     region: oregon
-    envVarGroups:
-      - name: acme-importer-shared
     buildCommand: |
       pip install -r requirements.txt
       python manage.py collectstatic --noinput
       python manage.py migrate
     startCommand: gunicorn acme_importer.wsgi:application --bind 0.0.0.0:$PORT
     envVars:
+      - fromGroup: acme-importer-shared
       - key: DJANGO_SETTINGS_MODULE
         value: acme_importer.settings
       - key: ALLOWED_HOSTS
@@ -35,11 +34,10 @@ services:
     env: python
     rootDir: BE
     region: oregon
-    envVarGroups:
-      - name: acme-importer-shared
     buildCommand: pip install -r requirements.txt
     startCommand: celery -A acme_importer worker -l info
     envVars:
+      - fromGroup: acme-importer-shared
       - key: DJANGO_SETTINGS_MODULE
         value: acme_importer.settings
       - key: DATABASE_URL
@@ -55,12 +53,6 @@ services:
         value: ${REDIS_URL}
       - key: CELERY_RESULT_BACKEND
         value: ${REDIS_URL}
-
-  - type: redis
-    name: acme-importer-redis
-    plan: free
-    region: oregon
-    ipAllowList: []
 
   - type: redis
     name: acme-importer-redis
